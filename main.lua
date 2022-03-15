@@ -26,6 +26,8 @@ loadingScreen = {}
 
 
 player = nil
+player = newPlayer(32, 32*3, 1, nil, 0)
+player.initKPFunctions()
 
 
 local flipProps = {
@@ -126,8 +128,7 @@ function love.load()
 			loadSaveFile()
 		elseif loadingScreen.onCycle == 2 then
 			loadKeydata ()
-			 player = newPlayer(32, 32*3, 1, nil, 0)
-			 player.initKPFunctions()
+			
 		elseif loadingScreen.onCycle >= loadingScreen.totalCycles+EXTRA_LOAD_CYCLES then 
 			gameMode = 0
 			--stuff to do once at end
