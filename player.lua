@@ -31,7 +31,7 @@ local SS_W = PLAYER_SPRITESHEET:getWidth()
 local SS_H = PLAYER_SPRITESHEET:getHeight()
 
 
-local PLAYER_SPEED = 100
+local PLAYER_SPEED = 200
 
 
 
