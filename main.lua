@@ -28,12 +28,13 @@ player = nil
 player = newPlayer(32, 32*3, 1, nil, 0)
 player.initKPFunctions()
 
+lagSwitch = false
+lagTHETA = 0
+lagCircleNum = 4000
+lagCirclePos = {}
 
-
-
-
-
-
+lagNUM = math.pi
+lagNUM2 = 20
 function love.load()
 	-------------------BEFORE LOADING SCREEN--------------------------
 	love.graphics.setDefaultFilter( "linear", "nearest", 1 )
@@ -112,32 +113,72 @@ function love.draw()
 	elseif gameMode == 1 then
 		   --draw title screen
 	end
+
+	if lagSwitch then
+		local slowBoi = {}
+		for i = 1, lagCircleNum do
+				if i%20 ~= 0 then
+					love.graphics.setColor(0, 0, 1)
+					love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 2, 100)
+				else
+					table.insert(slowBoi, i)
+				end
+				
+				
+
+				-- table.insert(lagCirclePos, {200+math.sin(theta), 60+math.cos(theta)})
+			end
+			local nextNum = 1
+		for i = 1, lagCircleNum do
+			love.graphics.setColor(1, 0.25, 0)
+			if i == slowBoi[nextNum] then
+				nextNum = nextNum + 1
+				love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 2, 100)
+			end
+		end			
+	end
 end
 
 
 function love.update(dt)
-	if gameMode == 0 then
-		player.update(dt)
-		local moveP = true
-		local firstCol = -1
-		local px, py, pw, ph = player.getBounds()
-		local tmpCol = world.slowCheckCollision(px, py, pw, ph) 
-		if tmpCol ~= false then
-			moveP = false
-			firstCol = tmpCol
-			tmpPXCol = world.slowCheckCollision(px, player.colY, pw, ph, firstCol)
-			if tmpPXCol ~= false then
-				tmpPYCol = world.slowCheckCollision(player.colX+1, py, pw-1, ph, firstCol)
-				if tmpPYCol == false then
-					player.move("Y")
-				end
-			else
-				player.move("X")
+
+	if lagSwitch then
+		local radius = 250
+		lagCirclePos = {}
+		lagTHETA = lagTHETA + 0.0025
+
+		-- for i = 1, lagCircleNum/2 do
+		-- 	table.insert(lagCirclePos, {i*20 + 60, (100+math.sin(i/(lagCircleNum/100))*50) })
+		-- end
+
+
+		for i = 1, lagCircleNum/2 do
+				local theta = ((i*((2*math.pi)/(lagCircleNum/2))) + lagTHETA) %(2*math.pi)
+				table.insert(lagCirclePos, {(1080/2)+math.sin(theta)*(radius + ((radius/10)*math.sin(theta*lagNUM2))), ((720/2)+math.cos(theta)* (radius + ((radius/10)*math.sin(theta*lagNUM2)))) })
 			end
 
-		else
-			player.move()
+
+		for i = 1, lagCircleNum/2 do
+			local theta = ((i*((2*math.pi)/(lagCircleNum/2))) + lagTHETA  ) %(2*math.pi)
+			table.insert(lagCirclePos, {(1080/2)+math.sin(theta)*(radius + ((radius/10)*math.sin((theta + 3.6415926535898)*lagNUM2))), ((720/2)+math.cos(theta)* (radius + ((radius/10)*math.sin((theta + 3.6415926535898)*lagNUM2)))) })
 		end
+		-- for i = 1, lagCircleNum/4 do
+		-- 	local theta = ((i*((2*math.pi)/(lagCircleNum/4))) + lagTHETA  ) %(2*math.pi)
+		-- 	table.insert(lagCirclePos, {(1080/2)+math.sin(theta)*(radius + ((radius/10)*math.sin((theta + 3.8415926535898)*lagNUM2))), ((720/2)+math.cos(theta)* (radius + ((radius/10)*math.sin((theta + 3.8415926535898)*lagNUM2)))) })
+		-- end
+		-- for i = 1, lagCircleNum/4 do
+		-- 	local theta = ((i*((2*math.pi)/(lagCircleNum/4))) + lagTHETA  ) %(2*math.pi)
+		-- 	table.insert(lagCirclePos, {(1080/2)+math.sin(theta)*(radius + ((radius/10)*math.sin((theta + 3.9415926535898)*lagNUM2))), ((720/2)+math.cos(theta)* (radius + ((radius/10)*math.sin((theta + 3.9415926535898)*lagNUM2)))) })
+		-- end
+		for i = 1, lagCircleNum*4 do
+			local theta = ((i*((2*math.pi)/(lagCircleNum/4))) + lagTHETA  ) %(2*math.pi)
+			table.insert(lagCirclePos, {(1080/2)+math.sin(theta)*(radius + ((radius/10)*math.sin((theta + 3.9415926535898)*lagNUM2))), ((720/2)+math.cos(theta)* (radius + ((radius/10)*math.sin((theta + 3.9415926535898)*lagNUM2)))) })
+		end
+	end
+
+	if gameMode == 0 then
+		player.update(dt)
+		
 		-- 	movePX = true
 		-- 	for i = firstCol, table.getn(MAP) do
 		-- 		-- print("checking " .. TILES[MAP[i].id].name)
@@ -182,6 +223,25 @@ function love.keypressed(k)
 	--GLOBAL KEY PRESSES
 	if k == "q" then
 		debugMode = not debugMode
+	end
+	if k == "-" then
+		lagNUM = lagNUM - 0.1
+		print(lagNUM)
+	end
+	if k == "=" then
+		lagNUM = lagNUM + 0.1
+		print(lagNUM)
+	end
+	if k == "9" then
+		lagSwitch = not lagSwitch
+		if lagSwitch then
+			lagCirclePos = {}
+			for i = 1, lagCircleNum do
+				theta = (i/lagCircleNum)*math.pi*2
+				table.insert(lagCirclePos, {200+math.sin(theta), 60+math.cos(theta)})
+			end
+
+		end
 	end
 	if k == "escape" then
 		love.event.quit()

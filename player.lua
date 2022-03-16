@@ -239,6 +239,25 @@ function newPlayer(x, y, playerID, status, facing, inventory, equipment)
 		p.nextX = pX
 		p.nextY = pY
 
+		local firstCol = -1
+		local px, py, pw, ph = p.getBounds()
+		local tmpCol = world.slowCheckCollision(px, py, pw, ph) 
+		if tmpCol ~= false then
+			firstCol = tmpCol
+			tmpPXCol = world.slowCheckCollision(px, p.colY, pw, ph, firstCol)
+			if tmpPXCol ~= false then
+				tmpPYCol = world.slowCheckCollision(p.colX+1, py, pw-1, ph, firstCol)
+				if tmpPYCol == false then
+					p.move("Y")
+				end
+			else
+				p.move("X")
+			end
+
+		else
+			p.move()
+		end
+
 	end
 	p.getBounds = function()
 		local offsetX = (PLAYER_FRAME_WIDTH*p.sx - p.colW)/2
