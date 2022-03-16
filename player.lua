@@ -241,12 +241,12 @@ function newPlayer(x, y, playerID, status, facing, inventory, equipment)
 
 		local firstCol = -1
 		local px, py, pw, ph = p.getBounds()
-		local tmpCol = world.slowCheckCollision(px, py, pw, ph) 
+		local tmpCol = world.quickCheckCollision(px, py, pw, ph) 
 		if tmpCol ~= false then
 			firstCol = tmpCol
-			tmpPXCol = world.slowCheckCollision(px, p.colY, pw, ph, firstCol)
+			tmpPXCol = world.quickCheckCollision(px, p.colY, pw, ph, firstCol)
 			if tmpPXCol ~= false then
-				tmpPYCol = world.slowCheckCollision(p.colX+1, py, pw-1, ph, firstCol)
+				tmpPYCol = world.quickCheckCollision(p.colX+1, py, pw-1, ph, firstCol)
 				if tmpPYCol == false then
 					p.move("Y")
 				end

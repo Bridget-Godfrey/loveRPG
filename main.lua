@@ -30,7 +30,7 @@ player.initKPFunctions()
 
 lagSwitch = false
 lagTHETA = 0
-lagCircleNum = 4000
+lagCircleNum = 300 --4000
 lagCirclePos = {}
 
 lagNUM = math.pi
@@ -117,9 +117,9 @@ function love.draw()
 	if lagSwitch then
 		local slowBoi = {}
 		for i = 1, lagCircleNum do
-				if i%20 ~= 0 then
-					love.graphics.setColor(0, 0, 1)
-					love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 2, 100)
+				if i%10 ~= 0 then
+					love.graphics.setColor(0, 0, 1, 0.8)
+					love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 5, 100)
 				else
 					table.insert(slowBoi, i)
 				end
@@ -130,12 +130,13 @@ function love.draw()
 			end
 			local nextNum = 1
 		for i = 1, lagCircleNum do
-			love.graphics.setColor(1, 0.25, 0)
+			love.graphics.setColor(1, 0.25, 0, 0.8)
 			if i == slowBoi[nextNum] then
 				nextNum = nextNum + 1
-				love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 2, 100)
+				love.graphics.circle("fill", lagCirclePos[i][1], lagCirclePos[i][2], 5, 100)
 			end
-		end			
+		end
+		love.graphics.setColor(1, 1, 1, 1)			
 	end
 end
 
@@ -224,13 +225,15 @@ function love.keypressed(k)
 	if k == "q" then
 		debugMode = not debugMode
 	end
-	if k == "-" then
-		lagNUM = lagNUM - 0.1
-		print(lagNUM)
-	end
-	if k == "=" then
-		lagNUM = lagNUM + 0.1
-		print(lagNUM)
+	if lagSwitch then 
+		if k == "-" then
+			lagCircleNum = lagCircleNum - 200
+			print(lagCircleNum)
+		end
+		if k == "=" then
+			lagCircleNum = lagCircleNum + 200
+			print(lagCircleNum)
+		end
 	end
 	if k == "9" then
 		lagSwitch = not lagSwitch
