@@ -2,8 +2,7 @@
 -- 2021 Bridget Godfrey
 love.graphics.setDefaultFilter( "linear", "nearest", 1 )
 --DEPENDANCIES
-require "tile"
-require "tileLoader"
+require "world"
 require "actor"
 require "player"
 textbox = require "textbox"
@@ -14,7 +13,7 @@ LOADING_BAR_WIDTH = VIRTUAL_SCREEN_WIDTH/2
 LOADING_BAR_HEIGHT = 80
 LOADING_BAR_X = VIRTUAL_SCREEN_WIDTH/4
 LOADING_BAR_Y = VIRTUAL_SCREEN_HEIGHT/4
-TILE_SIZE = 32
+
 --GLOBALS
 gameMode = -2
 debugMode = true
@@ -30,75 +29,6 @@ player = newPlayer(32, 32*3, 1, nil, 0)
 player.initKPFunctions()
 
 
-local flipProps = {
-	animated = false,
-	useTileColor = false,
-	flipH = false,
-	flipV = true,
-	rotation = nil,
-	bit6 = false
-
-}
-local verticalFlip = {
-	animated = false,
-	useTileColor = false,
-	flipH = true,
-	flipV = false,
-	rotation = nil,
-	bit6 = false
-
-}
-local rot1 = {
-	animated = false,
-	useTileColor = false,
-	flipH = false,
-	flipV = false,
-	rotation = 90,
-	bit6 = false
-
-}
-local rot2 = {
-	animated = false,
-	useTileColor = false,
-	flipH = false,
-	flipV = false,
-	rotation = 180,
-	bit6 = false
-
-}
-local tempMap = {
-	{1, 1*TILE_SIZE, 2*TILE_SIZE, nil},
-	{2, 10*TILE_SIZE, 8*TILE_SIZE, nil},
-	{3, 15*TILE_SIZE, 15*TILE_SIZE, rot1},
-	{3, 22*TILE_SIZE, 15*TILE_SIZE, rot2},
-	{4, 5*TILE_SIZE, 15*TILE_SIZE, nil},
-	{5, 5*TILE_SIZE, 10*TILE_SIZE, nil},
-	{6, 6*TILE_SIZE, 10*TILE_SIZE, nil},
-	{7, 7*TILE_SIZE, 10*TILE_SIZE, nil},
-	{8, 8*TILE_SIZE, 10*TILE_SIZE, nil},
-	{9, 9*TILE_SIZE, 10*TILE_SIZE, nil},
-	{1, 1*TILE_SIZE, 2*TILE_SIZE, nil},
-	{11, 10*TILE_SIZE, 10*TILE_SIZE, nil},
-	{11, 12*TILE_SIZE, 10*TILE_SIZE, verticalFlip},
-	{12, 10*TILE_SIZE, 12*TILE_SIZE, verticalFlip},
-	{12, 12*TILE_SIZE, 12*TILE_SIZE, nil},
-
-
-}
-
-MAP = {}
-mapSize = table.getn(tempMap)
-function loadTileInstances(cycle)
-	if cycle == 0 then
-		return mapSize -- eventually get a MAP and a MAP size
-	elseif cycle <= mapSize then
-		table.insert(MAP, newTileInstance(tempMap[cycle][1], tempMap[cycle][2], tempMap[cycle][3], tempMap[cycle][4]))
-		print ("created instance of " .. TILES[tempMap[cycle][1]].name)
-	else
-		--doNothing
-	end
-
-end
 
 
 
@@ -107,7 +37,7 @@ end
 function love.load()
 	-------------------BEFORE LOADING SCREEN--------------------------
 	love.graphics.setDefaultFilter( "linear", "nearest", 1 )
-
+	world.loadMap(0)
 	-------------------SETUP LOADING SCREEN---------------------------
 	gameMode = -1
 	EXTRA_LOAD_CYCLES = 2
@@ -121,7 +51,7 @@ function love.load()
 			--stuff to do once at start
 
 				loadingScreen.totalCycles = math.max(loadingScreen.totalCycles, loadTiles(0))
-				loadingScreen.totalCycles = math.max(loadingScreen.totalCycles, loadTileInstances(0))
+				loadingScreen.totalCycles = math.max(loadingScreen.totalCycles, world.loadTileInstances_ls(0))
 				loadingScreen.totalCycles = loadingScreen.totalCycles + EXTRA_LOAD_CYCLES
 				print("number of cycles = " .. loadingScreen.totalCycles)
 		elseif loadingScreen.onCycle == 1 then
@@ -130,6 +60,7 @@ function love.load()
 			loadKeydata ()
 			
 		elseif loadingScreen.onCycle >= loadingScreen.totalCycles+EXTRA_LOAD_CYCLES then 
+			world.endLoad()
 			gameMode = 0
 			--stuff to do once at end
 		else
@@ -137,7 +68,7 @@ function love.load()
 			local cycle = loadingScreen.onCycle-EXTRA_LOAD_CYCLES-1
 			print("on cycle " .. cycle .. ", " .. loadingScreen.onCycle)
 			loadTiles(cycle)
-			loadTileInstances(cycle)
+			world.loadTileInstances_ls(cycle)
 		end
 		loadingScreen.percentageComplete = loadingScreen.onCycle / loadingScreen.totalCycles
 		loadingScreen.onCycle = loadingScreen.onCycle + 1
@@ -160,18 +91,9 @@ function love.draw()
 			love.graphics.rectangle("fill", px, py, pw, ph)
 			love.graphics.setColor(1, 1, 1, 1)
 		end
-		local drawAfter = {}
-		for i = 1, table.getn(MAP) do
-			if MAP[i].y < player.colY then 
-				MAP[i].draw() 
-			else 
-				table.insert(drawAfter, i)
-			end
-		end
+		world.drawUntilY(player.colY)
 		player.draw()
-		for i = 1, table.getn(drawAfter) do
-			MAP[drawAfter[i]].draw()
-		end
+		world.drawAfterY()
 		if debugMode then
 			love.graphics.print(love.timer.getFPS(), VIRTUAL_SCREEN_WIDTH*.8, VIRTUAL_SCREEN_HEIGHT*.05, 0, 2, 2)
 			love.graphics.setColor(1, 1, 1, 0.3)
@@ -199,47 +121,52 @@ function love.update(dt)
 		local moveP = true
 		local firstCol = -1
 		local px, py, pw, ph = player.getBounds()
-		for i = 1, table.getn(MAP) do
-			if checkTICollision(MAP[i], px, py, pw, ph) then
-				-- print("collision with " .. TILES[MAP[i].id].name .."")
-				moveP = false
-				firstCol = i
-				if i >= 2 then firstCol = i-1 end
-				break
-			end
-		end
-		if moveP then 
-			player.move()
-		else
-			movePX = true
-			for i = firstCol, table.getn(MAP) do
-				-- print("checking " .. TILES[MAP[i].id].name)
-				if checkTICollision(MAP[i], px, player.colY, pw, ph) then
-					-- print("collision with " .. TILES[MAP[i].id].name .." (X)")
-					movePX = false
-					break
-				end
-			end
-
-			if movePX == false then
-			    movePY = true 
-				for i = firstCol, table.getn(MAP) do
-					if checkTICollision(MAP[i], player.colX+1, py, pw-1, ph) then
-						-- print("collision with " .. TILES[MAP[i].id].name .." (Y)")
-						movePY= false
-						break
-					end
-				end
-				if movePY then
-					player.move("Y") 
-				else
-					--stuck?
+		local tmpCol = world.slowCheckCollision(px, py, pw, ph) 
+		if tmpCol ~= false then
+			moveP = false
+			firstCol = tmpCol
+			tmpPXCol = world.slowCheckCollision(px, player.colY, pw, ph, firstCol)
+			if tmpPXCol ~= false then
+				tmpPYCol = world.slowCheckCollision(player.colX+1, py, pw-1, ph, firstCol)
+				if tmpPYCol == false then
+					player.move("Y")
 				end
 			else
 				player.move("X")
 			end
 
+		else
+			player.move()
 		end
+		-- 	movePX = true
+		-- 	for i = firstCol, table.getn(MAP) do
+		-- 		-- print("checking " .. TILES[MAP[i].id].name)
+		-- 		if checkTICollision(MAP[i], px, player.colY, pw, ph) then
+		-- 			-- print("collision with " .. TILES[MAP[i].id].name .." (X)")
+		-- 			movePX = false
+		-- 			break
+		-- 		end
+		-- 	end
+
+		-- 	if movePX == false then
+		-- 	    movePY = true 
+		-- 		for i = firstCol, table.getn(MAP) do
+		-- 			if checkTICollision(MAP[i], player.colX+1, py, pw-1, ph) then
+		-- 				-- print("collision with " .. TILES[MAP[i].id].name .." (Y)")
+		-- 				movePY= false
+		-- 				break
+		-- 			end
+		-- 		end
+		-- 		if movePY then
+		-- 			player.move("Y") 
+		-- 		else
+		-- 			--stuck?
+		-- 		end
+		-- 	else
+		-- 		player.move("X")
+		-- 	end
+
+		-- end
 		
 		 
 	elseif gameMode == 0.5 then

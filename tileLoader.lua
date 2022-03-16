@@ -17,7 +17,7 @@ end
 
 NUM_TILES = table.getn(dirLookup("tileData"))-1
 
-function loadTiles(cycle)
+function tl_loadTiles(cycle)
 	if cycle == 0 then
 		return NUM_TILES
 	elseif cycle <= NUM_TILES then

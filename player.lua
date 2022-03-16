@@ -1,7 +1,7 @@
 --player.lua
 
 require 'keybinds'
-
+require 'world'
 
 PLAYER_SPRITESHEET = nil
 
