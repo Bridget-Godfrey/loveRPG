@@ -6,6 +6,7 @@ require "world"
 require "actor"
 require "player"
 textbox = require "textbox"
+require "spritesheet"
 --CONSTANTS
 VIRTUAL_SCREEN_WIDTH = 1080
 VIRTUAL_SCREEN_HEIGHT = 720
@@ -32,6 +33,8 @@ lagSwitch = false
 lagTHETA = 0
 lagCircleNum = 300 --4000
 lagCirclePos = {}
+
+testSS = newSpritesheet("assets/testSpritesheet.png", 32, 32, 0, 0)
 
 lagNUM = math.pi
 lagNUM2 = 20
@@ -104,6 +107,16 @@ function love.draw()
 			for i= 0, 720, 32 do
 				love.graphics.line(0, i, 1080, i)
 			end
+			love.graphics.setColor(1, 1, 1, 1)
+			local flg = {}
+			flg.flipH = true
+			flg.flipV = false
+			testSS.drawSprite(1, 200, 200, 1,  1, 0, flg)
+			testSS.drawSprite(2, 232, 200)
+			testSS.drawSprite(3, 298, 200)
+			testSS.drawSprite(4, 200, 300)
+			testSS.drawSprite(5, 232, 300)
+			testSS.drawSprite(6, 298, 300)
 		end
 		if gameMode == 0.5 then
 			textbox.draw()
